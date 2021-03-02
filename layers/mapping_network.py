@@ -3,7 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class MappingNetwork(nn.Module):
-    def __init__(self, dim_hidden, dim_out, depth=3, activation=nn.LeakyReLU()):
+    def __init__(
+        self, 
+        dim_hidden, 
+        dim_out, 
+        depth=3, 
+        activation=nn.LeakyReLU(negative_slope=0.2)
+    ):
         super().__init__()
 
         self.net = nn.Sequential(

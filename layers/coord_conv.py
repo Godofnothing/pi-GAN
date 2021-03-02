@@ -17,14 +17,8 @@ class AddCoords(nn.Module):
         """
         batch_size, _, x_dim, y_dim = input_tensor.size()
 
-        xx_channel = torch.arange(x_dim).repeat(1, y_dim, 1)
-        yy_channel = torch.arange(y_dim).repeat(1, x_dim, 1).transpose(1, 2)
-
-        xx_channel = 2 * xx_channel.float() / (x_dim - 1) - 1
-        yy_channel = 2 * yy_channel.float() / (y_dim - 1) - 1
-
-        xx_channel = xx_channel.repeat(batch_size, 1, 1, 1).transpose(2, 3)
-        yy_channel = yy_channel.repeat(batch_size, 1, 1, 1).transpose(2, 3)
+        xx_channel = (2 * torch.arange(x_dim).float() / (x_dim - 1) - 1).repeat(batch_size, 1, y_dim, 1).transpose(2, 3)
+        yy_channel = (2 * torch.arange(y_dim).float() / (y_dim - 1) - 1).repeat(batch_size, 1, x_dim, 1)
 
         ret = torch.cat([
             input_tensor,
