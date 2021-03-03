@@ -5,6 +5,8 @@ from torch.optim.lr_scheduler import LambdaLR
 
 from torchvision.utils import save_image
 
+import os
+
 import pytorch_lightning as pl
 
 from collections import OrderedDict
@@ -43,6 +45,9 @@ class piGAN(pl.LightningModule):
         self.output_dir = output_dir
         self.num_samples = num_samples
 
+        # in case the directory for generated images doesn't exist - create it
+        os.makedirs(output_dir, exist_ok=True)
+
         self.G = Generator(
             image_size=image_size,
             dim_input=dim_input,
@@ -67,7 +72,7 @@ class piGAN(pl.LightningModule):
         target_lr_discr = self.optim_cfg["discriminator"]["target_learning_rate"]
 
         lr_gen = self.optim_cfg["generator"]["learning_rate"]
-        target_lr_gen = self.optim_cfg["discriminator"]["target_learning_rate"]
+        target_lr_gen = self.optim_cfg["generator"]["target_learning_rate"]
 
         lr_decay_span = self.optim_cfg["learning_rate_decay_span"]
         

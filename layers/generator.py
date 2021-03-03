@@ -13,13 +13,15 @@ class SirenGenerator(nn.Module):
         dim_input,
         dim_hidden,
         mapping_network_kw,
-        siren_mlp_kw
+        siren_mlp_kw,
+        activation=nn.LeakyReLU(negative_slope=0.2)
     ):
         super().__init__()
 
         self.mapping = MappingNetwork(
             dim_hidden=dim_input,
             dim_out=dim_hidden,
+            activation=activation,
             **mapping_network_kw
         )
 
@@ -67,6 +69,7 @@ class Generator(nn.Module):
         dim_hidden,
         mapping_network_kw,
         siren_mlp_kw,
+        activation=nn.LeakyReLU(negative_slope=0.2)
     ):
         super().__init__()
         self.dim_input = dim_input
@@ -75,6 +78,7 @@ class Generator(nn.Module):
         self.nerf_model = SirenGenerator(
             dim_input = dim_input,
             dim_hidden = dim_hidden,
+            activation=activation,
             mapping_network_kw=mapping_network_kw,
             siren_mlp_kw=siren_mlp_kw
         )
