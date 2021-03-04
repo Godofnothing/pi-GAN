@@ -41,8 +41,10 @@ class Discriminator(nn.Module):
         max_chan = 400,
         init_resolution = 32,
         add_layer_iters = 10000,
-        discriminator_block_activation = nn.LeakyReLU(),
-        from_rgb_activation = nn.LeakyReLU(),
+        pow2_bottom_layer_chans = 11, 
+        discriminator_block_activation = nn.LeakyReLU(negative_slope=0.2),
+        from_rgb_activation = nn.LeakyReLU(negative_slope=0.2),
+        add_tanh = False
     ):
         super().__init__()
         resolutions = math.log2(image_size)
@@ -53,7 +55,7 @@ class Discriminator(nn.Module):
         resolutions = int(resolutions)
         layers = resolutions - 1
 
-        chans = list(reversed(list(map(lambda t: 2 ** (11 - t), range(layers)))))
+        chans = list(reversed(list(map(lambda t: 2 ** (pow2_bottom_layer_chans - t), range(layers)))))
         chans = list(map(lambda n: min(max_chan, n), chans))
         chans = [init_chan, *chans]
         final_chan = chans[-1]
@@ -62,6 +64,7 @@ class Discriminator(nn.Module):
         self.layers = nn.ModuleList([])
         self.image_size = image_size
         self.resolutions = list(map(lambda t: 2 ** (resolutions - t), range(layers)))
+        self.add_tanh = add_tanh
 
         for resolution, in_chan, out_chan in zip(self.resolutions, chans[:-1], chans[1:]):
 
@@ -81,6 +84,9 @@ class Discriminator(nn.Module):
             )
 
         self.final_conv = CoordConv(final_chan, 1, kernel_size = 2)
+
+        if add_tanh:
+            self.tanh = nn.Tanh()
 
         self.add_layer_iters = add_layer_iters
         self.register_buffer('alpha', torch.tensor(0.))
@@ -117,4 +123,7 @@ class Discriminator(nn.Module):
             x = layer(x)
 
         out = self.final_conv(x)
+        if self.add_tanh:
+            out = self.tanh(out)
+
         return out

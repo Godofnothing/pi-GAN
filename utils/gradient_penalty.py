@@ -6,8 +6,7 @@ def gradient_penalty(images, output, weight = 10):
     gradients = torch_grad(
         outputs=output, 
         inputs=images,
-        grad_outputs=torch.ones(output.size(), 
-        device=device),
+        grad_outputs=torch.ones(output.size(), device=device),
         create_graph=True, 
         retain_graph=True, 
         only_inputs=True

@@ -11,8 +11,10 @@ import pytorch_lightning as pl
 
 from collections import OrderedDict
 
+from functools import partial
+
 from layers import Discriminator, Generator
-from utils import gradient_penalty, get_item
+from utils import gradient_penalty, get_item, log_exp_loss, discriminator_loss, generator_loss
 
 class piGAN(pl.LightningModule):
     def __init__(
@@ -30,7 +32,8 @@ class piGAN(pl.LightningModule):
         num_samples: int = 4,
         log_every: int = 10,
         gp_every : int = 4,
-        batch_size: int = 32
+        batch_size: int = 32,
+        loss_mode: str = "relu"
     ):
         super(piGAN, self).__init__()
         self.dim_input = dim_input
@@ -66,6 +69,9 @@ class piGAN(pl.LightningModule):
         self.iterations = 0
         self.last_loss_D = 0
         self.last_loss_G = 0
+
+        self.discriminator_loss = partial(discriminator_loss, mode=loss_mode)
+        self.generator_loss = partial(generator_loss, mode=loss_mode)
 
     def configure_optimizers(self):
         lr_discr = self.optim_cfg["discriminator"]["learning_rate"]
@@ -119,8 +125,7 @@ class piGAN(pl.LightningModule):
             fake_images = self.generate_samples(self.batch_size)
             fake_out = self.D(fake_images.clone().detach())
 
-            divergence = (F.relu(1 + real_out) + F.relu(1 - fake_out)).mean()
-            loss_D = divergence
+            loss_D = self.discriminator_loss(fake_out, real_out)
 
             if apply_gp:
                 gp = gradient_penalty(images, real_out)
@@ -142,8 +147,10 @@ class piGAN(pl.LightningModule):
         # train generator
         if optimizer_idx == 1:
             fake_images = self.generate_samples(self.batch_size)
-            loss_G = self.D(fake_images).mean()
-            
+            fake_out = self.D(fake_images)
+
+            loss_G = self.generator_loss(fake_out)
+
             self.last_loss_G = loss_G
 
             tqdm_dict = {'loss_G': loss_G}
