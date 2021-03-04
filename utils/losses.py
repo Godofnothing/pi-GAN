@@ -21,8 +21,8 @@ def generator_loss(fake_out, mode = "relu"):
     if mode == 'default':
         return fake_out.mean()
     elif mode == 'relu':
-        return F.relu(fake_out).mean()
+        return -F.relu(fake_out).mean()
     elif mode == 'log_exp':
-        return log_exp_loss(fake_out).mean()
+        return -log_exp_loss(fake_out).mean()
     else:
         raise NotImplementedError("Unknown loss")
