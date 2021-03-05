@@ -44,7 +44,7 @@ class Discriminator(nn.Module):
         pow2_bottom_layer_chans = 11, 
         discriminator_block_activation = nn.LeakyReLU(negative_slope=0.2),
         from_rgb_activation = nn.LeakyReLU(negative_slope=0.2),
-        add_tanh = False
+        final_activation = None
     ):
         super().__init__()
         resolutions = math.log2(image_size)
@@ -64,7 +64,7 @@ class Discriminator(nn.Module):
         self.layers = nn.ModuleList([])
         self.image_size = image_size
         self.resolutions = list(map(lambda t: 2 ** (resolutions - t), range(layers)))
-        self.add_tanh = add_tanh
+        self.final_activation = final_activation
 
         for resolution, in_chan, out_chan in zip(self.resolutions, chans[:-1], chans[1:]):
 
@@ -84,9 +84,6 @@ class Discriminator(nn.Module):
             )
 
         self.final_conv = CoordConv(final_chan, 1, kernel_size = 2)
-
-        if add_tanh:
-            self.tanh = nn.Tanh()
 
         self.add_layer_iters = add_layer_iters
         self.register_buffer('alpha', torch.tensor(0.))
@@ -123,7 +120,7 @@ class Discriminator(nn.Module):
             x = layer(x)
 
         out = self.final_conv(x)
-        if self.add_tanh:
-            out = self.tanh(out)
+        if self.final_activation:
+            out = self.final_activation(out)
 
         return out

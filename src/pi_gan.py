@@ -14,7 +14,7 @@ from collections import OrderedDict
 from functools import partial
 
 from layers import Discriminator, Generator
-from utils import gradient_penalty, get_item, log_exp_loss, discriminator_loss, generator_loss
+from utils import gradient_penalty, get_item, log_loss, discriminator_loss, generator_loss
 
 class piGAN(pl.LightningModule):
     def __init__(
