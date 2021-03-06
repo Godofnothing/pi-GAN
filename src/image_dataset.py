@@ -21,7 +21,7 @@ class ImageDataset(Dataset):
         image_size,
         transparent = False,
         aug_prob = 0.,
-        exts = ['jpg', 'jpeg', 'png']
+        exts = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG']
     ):
         super().__init__()
 
@@ -74,9 +74,3 @@ class ImageLoader(pl.LightningDataModule):
             shuffle = True, 
             drop_last = True
         )
-
-    def val_dataloader(self):
-        pass
-
-    def test_dataloader(self):
-        pass

@@ -2,16 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .siren import Siren
-from .siren_net import SirenMLP
+from .siren import SineLayer, Siren
 from .mapping_network import MappingNetwork
 from utils import get_image_from_nerf_model
 
 class SirenGenerator(nn.Module):
     def __init__(
         self,
-        dim_input,
-        dim_hidden,
+        input_features,
+        hidden_features,
         mapping_network_kw,
         siren_mlp_kw,
         activation=nn.LeakyReLU(negative_slope=0.2)
@@ -19,30 +18,30 @@ class SirenGenerator(nn.Module):
         super().__init__()
 
         self.mapping = MappingNetwork(
-            dim_hidden=dim_input,
-            dim_out=dim_hidden,
+            hidden_features=input_features,
+            out_features=hidden_features,
             activation=activation,
             **mapping_network_kw
         )
 
-        self.siren = SirenMLP(
-            dim_in = 3,
-            dim_hidden = dim_hidden,
-            dim_out = dim_hidden,
+        self.siren = Siren(
+            in_features= 3,
+            hidden_features = hidden_features,
+            out_features = hidden_features,
             **siren_mlp_kw
         )
 
         self.to_alpha = nn.Linear(
-            dim_hidden, 1
+            hidden_features, 1
         )
 
-        self.to_rgb_siren = Siren(
-            dim_in=dim_hidden,
-            dim_out=dim_hidden
+        self.to_rgb_siren = SineLayer(
+            in_features=hidden_features,
+            out_features=hidden_features
         )
 
         self.to_rgb = nn.Linear(
-            dim_hidden, 3
+            hidden_features, 3
         )
 
     def forward(self, latent, coors, batch_size=8192):
@@ -65,19 +64,19 @@ class Generator(nn.Module):
     def __init__(
         self,
         image_size,
-        dim_input,
-        dim_hidden,
+        input_features,
+        hidden_features,
         mapping_network_kw,
         siren_mlp_kw,
         activation=nn.LeakyReLU(negative_slope=0.2)
     ):
         super().__init__()
-        self.dim_input = dim_input
+        self.input_features = input_features
         self.image_size = image_size
 
         self.nerf_model = SirenGenerator(
-            dim_input = dim_input,
-            dim_hidden = dim_hidden,
+            input_features = input_features,
+            hidden_features = hidden_features,
             activation=activation,
             mapping_network_kw=mapping_network_kw,
             siren_mlp_kw=siren_mlp_kw

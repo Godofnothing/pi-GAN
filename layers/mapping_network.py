@@ -5,8 +5,8 @@ import torch.nn.functional as F
 class MappingNetwork(nn.Module):
     def __init__(
         self, 
-        dim_hidden, 
-        dim_out, 
+        hidden_features, 
+        out_features, 
         depth=3, 
         activation=nn.LeakyReLU(negative_slope=0.2)
     ):
@@ -14,13 +14,13 @@ class MappingNetwork(nn.Module):
 
         self.net = nn.Sequential(
            *sum([
-               [nn.Linear(dim_hidden, dim_hidden), activation]
+               [nn.Linear(hidden_features, hidden_features), activation]
                for i in range(depth)
             ], [])
         )
 
-        self.to_gamma = nn.Linear(dim_hidden, dim_out)
-        self.to_beta = nn.Linear(dim_hidden, dim_out)
+        self.to_gamma = nn.Linear(hidden_features, out_features)
+        self.to_beta = nn.Linear(hidden_features, out_features)
 
     def forward(self, x):
         x = F.normalize(x, dim = -1)

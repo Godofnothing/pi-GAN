@@ -20,8 +20,8 @@ class piGAN(pl.LightningModule):
     def __init__(
         self,
         image_size,
-        dim_input,
-        dim_hidden,
+        input_features,
+        hidden_features,
         optim_cfg,
         generator_cfg, 
         discriminator_cfg,
@@ -36,8 +36,8 @@ class piGAN(pl.LightningModule):
         loss_mode: str = "relu"
     ):
         super(piGAN, self).__init__()
-        self.dim_input = dim_input
-        self.dim_hidden = dim_hidden
+        self.input_features = input_features
+        self.hidden_features = hidden_features
         self.optim_cfg = optim_cfg
         self.batch_size = batch_size
         self.image_dataset = image_dataset
@@ -53,8 +53,8 @@ class piGAN(pl.LightningModule):
 
         self.G = Generator(
             image_size=image_size,
-            dim_input=dim_input,
-            dim_hidden=dim_hidden,
+            input_features=input_features,
+            hidden_features=hidden_features,
             **generator_cfg
         )
 
@@ -97,7 +97,7 @@ class piGAN(pl.LightningModule):
         return self.G(x)
 
     def generate_samples(self, num_samples: int):
-        rand_latents = torch.randn(num_samples, self.dim_input)
+        rand_latents = torch.randn(num_samples, self.input_features)
         rand_latents = rand_latents.to(self.device)
         return self.forward(rand_latents)
 
