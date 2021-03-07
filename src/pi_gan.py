@@ -14,7 +14,7 @@ from collections import OrderedDict
 from functools import partial
 
 from layers import Discriminator, Generator
-from utils import gradient_penalty, get_item, log_loss, discriminator_loss, generator_loss
+from utils import gradient_penalty, get_item, get_GAN_losses
 
 class piGAN(pl.LightningModule):
     def __init__(
@@ -70,8 +70,7 @@ class piGAN(pl.LightningModule):
         self.last_loss_D = 0
         self.last_loss_G = 0
 
-        self.discriminator_loss = partial(discriminator_loss, mode=loss_mode)
-        self.generator_loss = partial(generator_loss, mode=loss_mode)
+        self.discriminator_loss, self.generator_loss = get_GAN_losses(loss_mode) 
 
     def configure_optimizers(self):
         lr_discr = self.optim_cfg["discriminator"]["learning_rate"]
@@ -121,11 +120,14 @@ class piGAN(pl.LightningModule):
                 self.image_dataset.set_transforms(image_size)
 
             real_out = self.D(images)
+            real_labels = torch.ones_like(real_out)
 
             fake_images = self.generate_samples(self.batch_size)
             fake_out = self.D(fake_images.clone().detach())
+            fake_labels = torch.zeros_like(fake_out)
 
-            loss_D = self.discriminator_loss(fake_out, real_out)
+            loss_D = self.discriminator_loss(real_out, real_labels) \
+                   + self.discriminator_loss(fake_out, fake_labels)
 
             if apply_gp:
                 gp = gradient_penalty(images, real_out)
@@ -148,8 +150,9 @@ class piGAN(pl.LightningModule):
         if optimizer_idx == 1:
             fake_images = self.generate_samples(self.batch_size)
             fake_out = self.D(fake_images)
+            fake_labels = torch.ones_like(fake_out)
 
-            loss_G = self.generator_loss(fake_out)
+            loss_G = self.generator_loss(fake_out, fake_labels)
 
             self.last_loss_G = loss_G
 

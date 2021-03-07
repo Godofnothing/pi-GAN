@@ -1,28 +1,11 @@
-import torch
 import torch.nn.functional as F
+from torch import nn
 
-def log_loss(x):
-    """
-    non-saturating GAN loss
-    """
-    return torch.log(x)
-
-def discriminator_loss(fake_out, real_out, mode = "relu"):
+def get_GAN_losses(mode='default'):
     if mode == 'default':
-        return  (F.relu(1+real_out) + F.relu(1-fake_out)).mean()
-    elif mode == 'relu':
-        return  (F.relu(-real_out) + F.relu(fake_out)).mean()
+        return lambda logits, labels : F.relu(1 + (2 * labels - 1) * logits).mean(), \
+               lambda logits, labels : logits.mean()
     elif mode == 'log':
-        return -(log_loss(real_out) + log_loss(1-fake_out)).mean()
-    else:
-        raise NotImplementedError("Unknown loss")
-
-def generator_loss(fake_out, mode = "relu"):
-    if mode == 'default':
-        return fake_out.mean()
-    elif mode == 'relu':
-        return F.relu(-fake_out).mean()
-    elif mode == 'log':
-        return -log_loss(fake_out).mean()
+        return nn.BCEWithLogitsLoss(), nn.BCEWithLogitsLoss()
     else:
         raise NotImplementedError("Unknown loss")
