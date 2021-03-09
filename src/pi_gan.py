@@ -172,4 +172,4 @@ class piGAN(pl.LightningModule):
         if self.iterations % self.sample_every == 0:
             imgs = self.generate_samples(self.num_samples)
             imgs.clamp_(0., 1.)
-            save_image(imgs, f'{self.output_dir}/generated_image_{self.iterations}.png', nrow = 2)
+            save_image(imgs, f'{self.output_dir}/generated_image_{self.iterations}.png', nrow = max(2, self.num_samples))

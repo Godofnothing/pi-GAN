@@ -21,22 +21,28 @@ class ImageDataset(Dataset):
         image_size,
         transparent = False,
         aug_prob = 0.,
-        exts = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG']
+        exts = ['jpg', 'jpeg', 'png', 'JPG', 'JPEG'],
+        augmentation_list = []
     ):
         super().__init__()
 
         self.data_dir = data_dir
         self.paths = [p for ext in exts for p in Path(f'{data_dir}').glob(f'**/*.{ext}')]
         assert len(self.paths) > 0, f'No images were found in {data_dir} for training'
+        self.augmentation_list = augmentation_list
         self.set_transforms(image_size)
 
     def set_transforms(self, image_size):
-        self.transforms = T.Compose([
-            T.Lambda(partial(resize_to_minimum_size, image_size)),
-            T.Resize(image_size),
-            T.CenterCrop(image_size),
-            T.ToTensor()
-        ])
+        self.transforms = T.Compose(
+            [
+                T.Lambda(partial(resize_to_minimum_size, image_size)),
+                T.Resize(image_size),
+                T.CenterCrop(image_size)
+            ] + self.augmentation_list + 
+            [
+                T.ToTensor()
+            ]
+        )   
 
     def __len__(self):
         return len(self.paths)
