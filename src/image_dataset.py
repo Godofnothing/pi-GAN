@@ -50,6 +50,8 @@ class ImageDataset(Dataset):
     def __getitem__(self, index):
         path = self.paths[index]
         img = Image.open(path)
+        if img.mode == 'RGBA':
+            img = img.convert(mode="RGB")
         return self.transforms(img)
 
 class ImageLoader(pl.LightningDataModule):
